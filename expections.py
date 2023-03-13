@@ -1,0 +1,3 @@
+
+class ParserExecption(Exception):
+    pass

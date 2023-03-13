@@ -1,0 +1,10 @@
+myString = "my string";
+myInt = 10;
+myBool = true;
+
+mySection = (
+    mySectionKey = "test";
+    mySubSection = (
+        mySubSectionKey = "sub test";
+    );
+);
