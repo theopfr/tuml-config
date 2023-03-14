@@ -1,53 +1,44 @@
 import re
 import string
-from expections import ParserExecption
+from exeptions import LexerExeption
 from tokens import Token, TokenType
 
 
 class Lexer:
-    def __init__(self, text_input: str) -> list:
-        self.text_input = text_input
+    def __init__(self, config_string: str) -> list:
+        self.config_string = config_string
         self.current_position = 0
-        self.current_char = self.text_input[self.current_position]
+        self.current_char = self.config_string[self.current_position]
 
         self.tokens = []
-
-        self.current_token_value = ""
-
-        self.inside_integer = False
-        self.inside_section = False
-        self.nexted_section_level = 0
-
-        self.expect_value = False
-        self.expect_key = True
-
+        
     def error(self, message: str) -> None:
-        """ Raises a parser error. """
+        """ Raises a lexer error. """
 
-        raise ParserExecption(message)
+        raise LexerExeption(message)
 
     def set_token(self, token_type: TokenType, value: str) -> None:
         """ Adds a new token to the token list and resets the current token value. """
 
         self.tokens.append(Token(token_type, value))
-        self.current_token_value = ""
 
     def advance(self) -> None:
         """ Advances to the next character and checks if the input string has ended. """
 
         self.current_position += 1
-        if self.current_position > len(self.text_input) - 1:
+        if self.current_position > len(self.config_string) - 1:
             self.current_char = "EOF"
         else:
-            self.current_char = self.text_input[self.current_position]
+            self.current_char = self.config_string[self.current_position]
 
     def build_key(self) -> str:
         """ Builds a config-key out of the characters in the input string. """
 
-        allowedCharacters = string.ascii_lowercase + string.ascii_uppercase
+        allowed_characters = string.ascii_lowercase + string.ascii_uppercase + "0123456789_"
+
         result = ""
         while self.current_char != ":":
-            if self.current_char not in allowedCharacters:
+            if self.current_char not in allowed_characters:
                 self.error("Unexpected character in key! Only lower- and upper-case letters are allowed!")
 
             result += self.current_char
@@ -58,11 +49,15 @@ class Lexer:
     def build_number(self) -> str:
         """ Builds an interger or float out of the characters in the input string. """
 
-        # chatgpt generated regex: ^-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?$
-        number_ending_chars = [";", ",", "]"]
+        allowed_characters = "0123456789.eE-+"
 
-        result = ""
-        while self.current_char not in number_ending_chars:
+        result = self.current_char
+        self.advance()
+
+        while self.current_char in allowed_characters:
+            if self.current_char in ".eE-+":
+                allowed_characters.replace(self.current_char, "")
+
             result += self.current_char
             self.advance()
 
@@ -74,6 +69,16 @@ class Lexer:
 
         return result
 
+    def build_bool(self, bool_type: str) -> str:
+        """ Builds a boolean ('true' or 'false') out of the characters in the input string. """
+        
+        result = ""
+        while result != bool_type:
+            result += self.current_char
+            self.advance()
+
+        return result
+
     def build_string(self) -> str:
         """ Builds a string without '"' out of the characters in the input string. """
 
@@ -82,6 +87,8 @@ class Lexer:
 
         result = ""
         while self.current_char != '"':
+            if self.current_char == "EOF":
+                self.error("Expected closing quotes!")
             result += self.current_char
             self.advance()
 
@@ -94,105 +101,91 @@ class Lexer:
         """ Creates tokens from the characters in the input string and adds them to the token list. """
 
         while self.current_char != "EOF":
-            
+            #print(self.tokens)
             # ignore spaces outside strings
             if self.current_char.isspace():
                 self.advance()
                 continue
 
-            # if a key is expected
-            if self.expect_key:
+            if self.current_char == "t": # TODO fix
+                if self.config_string[self.current_position:self.current_position + 4] == "true":
+                    self.set_token(TokenType.BOOL, self.build_bool("true"))
+                    continue
 
-                # check if there is a closing section
-                if self.current_char == ")":
-                    self.set_token(TokenType.SECTION_END, ")")
-                    self.advance()
+            elif self.current_char == "f": # TODO fix
+                if self.config_string[self.current_position:self.current_position + 5] == "false":
+                    self.set_token(TokenType.BOOL, self.build_bool("false"))
                     continue
-                
-                # check if there is a closing list
-                elif self.current_char == "]":
-                    self.set_token(TokenType.LIST_END, "]")
-                    self.advance()
-                    continue
-                
-                # check if there is a closing key-value pair (TODO what's this again?)
-                elif self.current_char == ";":
-                    self.advance()
-                    continue
-                    
-                # get key
+
+            if self.current_char.isalpha():
                 self.set_token(TokenType.KEY, self.build_key())
 
-                # check if the key has ended indicated by ":"
-                if self.current_char == ":":
-                    self.expect_key = False
-                    self.expect_value = True
-                    self.advance()
+            elif self.current_char == '"':
+                self.set_token(TokenType.STRING, self.build_string())
 
-            # if a value is expected
-            elif self.expect_value:
+            elif self.current_char.isdigit() or re.match("[\.\-\+]", self.current_char):
+                self.set_token(TokenType.INTEGER, self.build_number())
 
-                # check if a string starts indicated by '"'
-                if self.current_char == '"':
-                    self.set_token(TokenType.STRING, self.build_string())
+            elif self.current_char == ":":
+                self.set_token(TokenType.EOK, ":")
+                self.advance()
 
-                # check if an integer or float starts indicated by a number, ".", "-" or "+"
-                elif self.current_char.isdigit() or re.match("[\.\-\+]", self.current_char):
-                    self.set_token(TokenType.INTEGER, self.build_number())
+            elif self.current_char == ";":
+                self.set_token(TokenType.EOE, ";")
+                self.advance()
 
-                # check if the value has ended indicated by ";"
-                elif self.current_char == ";":
-                    self.expect_key = True
-                    self.expect_value = False
-                    self.advance()
+            elif self.current_char == "[":
+                self.set_token(TokenType.LIST_START, "[")
+                self.advance()
 
-                # check if a new section starts
-                elif self.current_char == "(":
-                    self.expect_key = True
-                    self.expect_value = False
-                    self.set_token(TokenType.SECTION_START, "(")
-                    self.advance()
+            elif self.current_char == "]":
+                self.set_token(TokenType.LIST_END, "]")
+                self.advance()
 
-                # check if a new list starts
-                elif self.current_char == "[":
-                    self.expect_key = False
-                    self.expect_value = True
-                    self.set_token(TokenType.LIST_START, "[")
-                    self.advance()
+            elif self.current_char == ",":
+                self.set_token(TokenType.LIST_DELIM, ",")
+                self.advance()
 
-                # check if a list has ended
-                elif self.current_char == "]":
-                    self.set_token(TokenType.LIST_END, "]")
-                    self.advance()
+            elif self.current_char == "(":
+                self.set_token(TokenType.SECTION_START, "(")
+                self.advance()
 
-                # ignore commatas in lists
-                elif self.current_char == ",":
-                    self.advance()
+            elif self.current_char == ")":
+                self.set_token(TokenType.SECTION_END, ")")
+                self.advance()
 
-                # throw expection if any other character is encountered
-                else:
-                    self.error("Unexpected character!")
+            continue
 
         return self.tokens
 
 
 """ example
-"""
-config = '''
+
+config2 = '''
     myInt: 2; 
-    myString: "test hi"; 
+    myString: "hi im ron"; 
     mySub: ( mySubkey: "sub test"; list: [5, 8]; ); 
     myList: ["a", 2, 3,
         ( 
             subAgain: "lol"; 
-            subSecond: "re"; 
-            n: [[(a: "a";)]];
-        );
+            subSecond: "re";
+        ), 0
     ];
     last: "the end";
-
+    myBool: false;
 '''
 
-lexer = Lexer(config)
-print(lexer.tokenize())
+config = '''
+    myInt: .20;
+    mySting: "hello test";
+    myList: ["first item", "second item", 2];
+    mySection: (
+        subString: "sub key";
+        subInt: 202;
+    );
+'''
 
+lexer = Lexer(config2)
+for e in lexer.tokenize():
+    print(e)
+"""
