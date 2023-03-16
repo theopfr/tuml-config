@@ -124,7 +124,7 @@ class Lexer:
                 self.set_token(TokenType.STRING, self.build_string())
 
             elif self.current_char.isdigit() or re.match("[\.\-\+]", self.current_char):
-                self.set_token(TokenType.INTEGER, self.build_number())
+                self.set_token(TokenType.NUMBER, self.build_number())
 
             elif self.current_char == ":":
                 self.set_token(TokenType.EOK, ":")

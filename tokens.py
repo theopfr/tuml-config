@@ -5,13 +5,13 @@ from enum import Enum
 class TokenType(Enum):
     KEY: str = "KEY"
     STRING: str = "STRING"
-    INTEGER: str = "INTEGER"
+    NUMBER: str = "NUMBER"
     BOOL: str = "BOOL"
-    LIST_START: str = "LIST_START"
-    LIST_END: str = "LIST_END"
-    LIST_DELIM: str = "LIST_DELIM"
-    SECTION_START: str = "SECTION_START"
-    SECTION_END: str = "SECTION_END"
+    LIST_START: str = "["
+    LIST_END: str = "]"
+    LIST_DELIM: str = ","
+    SECTION_START: str = "("
+    SECTION_END: str = ")"
     
     # end of key
     EOK: str = ":"
@@ -30,4 +30,4 @@ class Token:
         return f"Token( '{self.token_type}', '{self.token_value}' )"
 
     def __repr__(self) -> str:
-        return self.__str__()
+        return self.token_value

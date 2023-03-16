@@ -5,16 +5,12 @@ from exeptions import ParserExeption
 
 class Parser:
     def __init__(self) -> None:
-        # self.expected_types = [TokenType.KEY]
-        self.last_key = ""
+        pass
 
     def error(self, message: str) -> None:
         """ Raises a parser error. """
 
         raise ParserExeption(message)
-
-    def eat(self) -> None:
-        return
 
     def section_end_idx(self, tokens: list[Token], current_position: int) -> int:
         nested_section_levels = 1
@@ -45,7 +41,7 @@ class Parser:
         return idx + current_position + 1
 
     def parse_list(self, tokens: list[Token]) -> list:
-        expected_types = [TokenType.STRING, TokenType.INTEGER, TokenType.BOOL, TokenType.SECTION_START, TokenType.LIST_START, TokenType.LIST_END]
+        expected_types = [TokenType.STRING, TokenType.NUMBER, TokenType.BOOL, TokenType.SECTION_START, TokenType.LIST_START, TokenType.LIST_END]
         result_list = []
 
         tokens.append(Token(TokenType.EOF, "EOF"))
@@ -58,12 +54,17 @@ class Parser:
 
             # check if the token is expected, if not throw an error
             if current_token_type not in expected_types:
-                print(current_token_type, expected_types)
                 self.error("Unexpected token!")
 
             # check if the token is a dict-value and append it to the list as an item
-            elif current_token_type in [TokenType.STRING, TokenType.INTEGER, TokenType.BOOL]:
+            elif current_token_type in [TokenType.STRING, TokenType.NUMBER, TokenType.BOOL]:
                 expected_types = [TokenType.LIST_DELIM, TokenType.LIST_END]
+
+                if current_token_type == TokenType.NUMBER:
+                    current_token_value = float(current_token_value) if not float(current_token_value).is_integer() else int(current_token_value)
+                elif current_token_type == TokenType.BOOL:
+                    current_token_value = current_token_value == "true"
+
                 result_list.append(current_token_value)
 
             # check if it is the token for station a new list ("[") and parse the list with all it's tokens recursively
@@ -75,11 +76,8 @@ class Parser:
                 result_list.append(self.parse_list(sub_tokens))
 
                 # the closing bracket token will be skipped by jumping to the end of the list, continue from there
-                expected_types = [TokenType.LIST_END]
+                expected_types = [TokenType.LIST_DELIM]
                 idx = section_ends
-            
-            elif current_token_type == TokenType.LIST_END:
-                expected_types = [TokenType.EOE]
 
             # check if it is the token for station a new section ("(") and parse the section with all it's tokens recursively
             elif current_token_type == TokenType.SECTION_START:
@@ -94,7 +92,7 @@ class Parser:
                 idx = section_ends
 
             elif current_token_type == TokenType.LIST_DELIM:
-                expected_types = [TokenType.STRING, TokenType.INTEGER, TokenType.BOOL, TokenType.SECTION_START, TokenType.LIST_START]
+                expected_types = [TokenType.STRING, TokenType.NUMBER, TokenType.BOOL, TokenType.SECTION_START, TokenType.LIST_START]
 
             idx += 1
 
@@ -115,7 +113,7 @@ class Parser:
 
             # check if the token is expected, if not throw an error
             if current_token_type not in expected_types:
-                print(current_token_type, current_token_value, expected_types)
+                print(current_token_type, expected_types)
                 self.error("Unexpected token!")
 
             # check if it is the End-Of-File token and if so break
@@ -130,10 +128,16 @@ class Parser:
 
             # check if it is the End-Of-Key token (":") and if so expect a dict-value token
             elif current_token_type == TokenType.EOK:
-                expected_types = [TokenType.STRING, TokenType.INTEGER, TokenType.BOOL, TokenType.LIST_START, TokenType.SECTION_START]
+                expected_types = [TokenType.STRING, TokenType.NUMBER, TokenType.BOOL, TokenType.LIST_START, TokenType.SECTION_START]
 
             # check if the token is a dict-value
-            elif current_token_type in [TokenType.STRING, TokenType.INTEGER, TokenType.BOOL]:
+            elif current_token_type in [TokenType.STRING, TokenType.NUMBER, TokenType.BOOL]:
+                
+                if current_token_type == TokenType.NUMBER:
+                    current_token_value = float(current_token_value) if not float(current_token_value).is_integer() else int(current_token_value)
+                elif current_token_type == TokenType.BOOL:
+                    current_token_value = current_token_value == "true"
+
                 result_dict[last_key] = current_token_value
                 expected_types = [TokenType.EOE]
 
@@ -153,10 +157,6 @@ class Parser:
                 expected_types = [TokenType.EOE]
                 idx = list_ends
 
-            # check if 
-            #elif current_token_type == TokenType.LIST_END:
-            #    expected_types = [TokenType.EOE, TokenType.LIST_END, TokenType.LIST_DELIM]
-
             # check if it is the token for station a new section ("(") and parse the section with all it's tokens recursively
             elif current_token_type == TokenType.SECTION_START:
                 # get the index of the token which ends the section and extract all the tokens from the current position until there
@@ -166,7 +166,7 @@ class Parser:
                 result_dict[last_key] = self.parse(sub_tokens)
 
                 # the closing paranthesis token will be skipped by jumping to the end of the section, continue from there
-                expected_types = [TokenType.EOE, TokenType.LIST_END, TokenType.LIST_DELIM]
+                expected_types = [TokenType.EOE]
                 idx = section_ends
                 
             idx += 1
@@ -177,12 +177,10 @@ class Parser:
         # TODO load file here
 
         tokens = Lexer(config).tokenize()
-        print(tokens, "\n\n")
         parsed = self.parse(tokens) 
 
 
         return parsed
-
 
 
 config2 = '''
@@ -242,9 +240,31 @@ section1: (
 '''
 
 config = '''
+    testString: "test string";
+    testInt: 10;
+    testFloat: -2e-3;
+    testTrue: true;
+    testFalse: false;
+    testSection: (
+        sectionString: "test string";
+        sectionList: [1, 2, 3];
+    );
+    testList: [1, 2, "test string", (
+        listSectionInt: 3;
+        listSectionBool: true;
+    )];
+    lastTestFloat: .3E-7;
+    l: [[1], [2], [3]];
+    l2: [
+        [
+            [2]
+        ]
+    ];
 '''
+
+
 
 # TODO replace class with just functions
 
-parsed = Parser().load(config2)
-print(parsed)
+#parsed = Parser().load(config)
+#print(parsed)
