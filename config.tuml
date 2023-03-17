@@ -1,10 +1,20 @@
-myString = "my string";
-myInt = 10;
-myBool = true;
-
-mySection = (
-    mySectionKey = "test";
-    mySubSection = (
-        mySubSectionKey = "sub test";
-    );
+testString: "test string";
+testInt: 10;
+testFloat: -2e-3;
+testTrue: true;
+testFalse: false;
+testSection: (
+    sectionString: "test string";
+    sectionList: [1, 2, 3];
 );
+testList: [1, 2, "test string", (
+    listSectionInt: 3;
+    listSectionBool: true;
+)];
+lastTestFloat: .3E-7;
+l: [[1], [2], [3]];
+l2: [
+    [
+        [2]
+    ]
+];

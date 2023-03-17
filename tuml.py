@@ -1,6 +1,7 @@
 from lexer import Lexer
 from tokens import Token, TokenType
 from exeptions import ParserExeption
+from utils import load_file
 
 
 class Parser:
@@ -13,6 +14,9 @@ class Parser:
         raise ParserExeption(message)
 
     def section_end_idx(self, tokens: list[Token], current_position: int) -> int:
+        """ Finds the index of the token which end the outermost section indicated by "]" """
+
+        idx = 0
         nested_section_levels = 1
         for idx, current_token in enumerate(tokens[current_position + 1:]):
 
@@ -27,6 +31,9 @@ class Parser:
         return idx + current_position + 1
 
     def list_end_idx(self, tokens: list[Token], current_position: int) -> int:
+        """ Finds the index of the token which end the outermost section indicated by ")" """
+
+        idx = 0
         nested_section_levels = 1
         for idx, current_token in enumerate(tokens[current_position + 1:]):
 
@@ -41,6 +48,8 @@ class Parser:
         return idx + current_position + 1
 
     def parse_list(self, tokens: list[Token]) -> list:
+        """ Recursively parses tokens into a Python list. """
+
         expected_types = [TokenType.STRING, TokenType.NUMBER, TokenType.BOOL, TokenType.SECTION_START, TokenType.LIST_START, TokenType.LIST_END]
         result_list = []
 
@@ -99,6 +108,8 @@ class Parser:
         return result_list
 
     def parse(self, tokens: list[Token]) -> dict:
+        """ Recursively parses the tokens into a Python dict. """
+
         expected_types = [TokenType.KEY]
         last_key = None
         result_dict = {}
@@ -172,15 +183,20 @@ class Parser:
             idx += 1
 
         return result_dict
+    
+    def parse_tuml_string(self, config_string: str) -> dict:
+        tokens = Lexer(config_string).tokenize()
+        return self.parse(tokens)
 
-    def load(self, config: str) -> dict:
-        # TODO load file here
-
-        tokens = Lexer(config).tokenize()
-        parsed = self.parse(tokens) 
+    def load(self, config_file: str) -> dict:
+        config_string = load_file(config_file)
+        return self.parse_tuml_string(config_string)
 
 
-        return parsed
+
+tuml = Parser()
+parsed = tuml.load("./config.tuml")
+print(parsed)
 
 
 config2 = '''
