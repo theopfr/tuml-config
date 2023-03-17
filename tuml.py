@@ -95,7 +95,7 @@ def parse_list(tokens: list[Token]) -> list:
             # recursive descent on the extracted section and append it to the list
             result_list.append(parse(sub_tokens))
 
-            # the closing paranthesis token will be skipped by jumping to the end of the section, continue from there
+            # the closing parentheses token will be skipped by jumping to the end of the section, continue from there
             expected_types = [TokenType.LIST_DELIM, TokenType.LIST_END]
             idx = section_ends
 
@@ -176,7 +176,7 @@ def parse(tokens: list[Token]) -> dict:
             # recursive descent on the extracted section
             result_dict[last_key] = parse(sub_tokens)
 
-            # the closing paranthesis token will be skipped by jumping to the end of the section, continue from there
+            # the closing parentheses token will be skipped by jumping to the end of the section, continue from there
             expected_types = [TokenType.EOE]
             idx = section_ends
             
