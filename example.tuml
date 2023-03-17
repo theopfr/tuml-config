@@ -1,0 +1,18 @@
+companyName: "Tuml Inc.";
+comanySince: 2023;
+employees: [
+    (
+        name: "bill";
+        age: 43;
+        hobbies: ["tennis", "warhammer", "design"];
+        isSenior: true;
+        salaryPerHour: 40.5;
+    ),
+    (
+        name: "ted";
+        age: 32;
+        hobbies: ["fitness", "coding", "DnD"];
+        isSenior: false;
+        salaryPerHour: 35.5;
+    )
+];

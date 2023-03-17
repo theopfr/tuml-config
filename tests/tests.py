@@ -4,18 +4,15 @@ from test_cases import *
 import sys
 sys.path.append("..")
 
-from tuml import Parser, Lexer
-
+import tuml
 
 class TestParser(unittest.TestCase):
     def test1(self):
-        tokens = Lexer(success_case_1["input"]).tokenize()
-        parsed = Parser().parse(tokens)
+        parsed = tuml.loads(success_case_1["input"])
         self.assertEqual(parsed, success_case_1["expected"])
 
     def test2(self):
-        tokens = Lexer(success_case_2["input"]).tokenize()
-        parsed = Parser().parse(tokens)
+        parsed = tuml.loads(success_case_2["input"])
         self.assertEqual(parsed, success_case_2["expected"])
 
 

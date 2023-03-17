@@ -1,11 +1,13 @@
-from tuml import tuml
-
-parsed = tuml.load("./config.tuml")
-print(parsed)
+import tuml
 
 
+# example of loading a tuml file
+parsed = tuml.load("./example.tuml")
+print(parsed, "\n")
 
-config2 = '''
+
+# example of parsing a tuml string
+config_string = '''
 myKey: "myValue";
 myList: ["myItem", 2];
 mySection: (
@@ -14,7 +16,12 @@ mySection: (
 );
 '''
 
-config1 = '''
+parsed = tuml.loads(config_string)
+print(parsed)
+
+
+# more examples
+config_string_1 = '''
 myInt: 9;
 mySection: (
     mySectionString: "sub";
@@ -40,9 +47,8 @@ b: (
     mhm: -1;
 ); 
 '''
-# myList: [1, [2, 3, (a: "0"; b: (u: "1"; u2: "2"; u3: ["l", "o", "l"];);)]]
 
-config0 = '''
+config_string_2 = '''
 section1: (
     section2: (
         section3: (
@@ -61,7 +67,7 @@ section1: (
 );
 '''
 
-config = '''
+config_string_3 = '''
     testString: "test string";
     testInt: 10;
     testFloat: -2e-3;

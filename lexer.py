@@ -39,7 +39,7 @@ class Lexer:
         result = ""
         while self.current_char != ":":
             if self.current_char not in allowed_characters:
-                self.error("Unexpected character in key! Only lower- and upper-case letters are allowed!")
+                self.error("Unexpected character in key! Only latin letters, the numbers 0-9 and '_' are allowed!")
 
             result += self.current_char
             self.advance()

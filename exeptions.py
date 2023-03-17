@@ -5,3 +5,8 @@ class LexerExeption(Exception):
 
 class ParserExeption(Exception):
     pass
+
+
+class TumlFileExeption(Exception):
+    pass
+
