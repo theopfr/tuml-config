@@ -19,7 +19,7 @@ I just wanted to write a parser...
 - example:
     ```
     companyName: "Tuml Inc.";
-    comanySince: 2023;
+    companySince: 2023;
     employees: [
         (
             name: "bill";
